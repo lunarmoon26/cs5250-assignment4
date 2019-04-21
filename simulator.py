@@ -86,6 +86,7 @@ def RR_scheduling(process_list, time_quantum ):
 
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
+    # return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
 
 def SRTF_scheduling(process_list):
     schedule = []
@@ -128,6 +129,7 @@ def SRTF_scheduling(process_list):
 
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
+    # return (["to be completed, scheduling process_list on SRTF, using process.burst_time to calculate the remaining time of the current process "], 0.0)
 
 def SJF_scheduling(process_list, alpha):
     schedule = []
