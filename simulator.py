@@ -130,7 +130,42 @@ def SRTF_scheduling(process_list):
     return schedule, average_waiting_time
 
 def SJF_scheduling(process_list, alpha):
-    return (["to be completed, scheduling SJF without using information from process.burst_time"],0.0)
+    schedule = []
+    ready = []
+    current_time = 0
+    waiting_time = 0
+    avail_process = deepcopy(process_list)
+    current_process = None
+    estimate_burst = {}
+
+    while len(avail_process) or len(ready):
+
+        if current_process and current_process.burst_time == 0:
+            actual = current_time - current_process.last_scheduled_time
+            estimate_burst[current_process.id] = alpha * actual + (1 - alpha) * estimate_burst[current_process.id]
+            current_process = None
+
+        process = pop_new_process(avail_process, current_time)
+        if process:
+            if process.id not in estimate_burst:
+                estimate_burst[process.id] = 5
+            ready.append(process)
+
+        if len(ready) and not current_process:
+            ready.sort(key=lambda p: (estimate_burst[p.id], p.arrive_time))
+            current_process = ready.pop(0)
+            waiting_time += current_time - current_process.arrive_time
+            schedule.append((current_time,current_process.id))
+            current_process.last_scheduled_time = current_time
+
+        if current_process:
+            current_process.burst_time -= 1
+
+        current_time += 1
+
+    average_waiting_time = waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
+    # return (["to be completed, scheduling SJF without using information from process.burst_time"],0.0)
 
 
 def read_input():
