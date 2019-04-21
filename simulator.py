@@ -10,10 +10,15 @@ Output files:
     SJF.txt
 '''
 import sys
+import argparse
 from operator import attrgetter
 from copy import deepcopy
 
-input_file = 'input.txt'
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--input_file', default='input.txt', help='Path to the input file')
+parser.add_argument('--time_quantum', default=2, type=int, help='Time Quantum for the RR')
+parser.add_argument('--alpha', default=0.5, type=float, help='Alpha for the SJF')
+args = parser.parse_args()
 
 def pop_new_process(process_list, current_time):
     new_proc = [process for process in process_list if process.arrive_time == current_time]
@@ -172,7 +177,7 @@ def SJF_scheduling(process_list, alpha):
 
 def read_input():
     result = []
-    with open(input_file) as f:
+    with open(args.input_file) as f:
         for line in f:
             array = line.split()
             if (len(array)!= 3):
@@ -189,21 +194,25 @@ def write_output(file_name, schedule, avg_waiting_time):
 
 def main(argv):
     process_list = read_input()
-    print ("printing input ----")
-    for process in process_list:
-        print (process)
+    # print ("printing input ----")
+    # for process in process_list:
+    #     print (process)
     print ("simulating FCFS ----")
     FCFS_schedule, FCFS_avg_waiting_time =  FCFS_scheduling(process_list)
     write_output('FCFS.txt', FCFS_schedule, FCFS_avg_waiting_time )
+    print ("FCFS waiting time: %.2f" % FCFS_avg_waiting_time)
     print ("simulating RR ----")
-    RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = 2)
+    RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = args.time_quantum)
     write_output('RR.txt', RR_schedule, RR_avg_waiting_time )
+    print ("RR waiting time: %.2f" % RR_avg_waiting_time)
     print ("simulating SRTF ----")
     SRTF_schedule, SRTF_avg_waiting_time =  SRTF_scheduling(process_list)
     write_output('SRTF.txt', SRTF_schedule, SRTF_avg_waiting_time )
+    print ("SRTF waiting time: %.2f" % SRTF_avg_waiting_time)
     print ("simulating SJF ----")
-    SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = 0.5)
+    SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = args.alpha)
     write_output('SJF.txt', SJF_schedule, SJF_avg_waiting_time )
+    print ("SJF waiting time: %.2f" % SJF_avg_waiting_time)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
