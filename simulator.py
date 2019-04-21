@@ -10,8 +10,17 @@ Output files:
     SJF.txt
 '''
 import sys
+from operator import attrgetter
+from copy import deepcopy
 
 input_file = 'input.txt'
+
+def pop_new_process(process_list, current_time):
+    new_proc = [process for process in process_list if process.arrive_time == current_time]
+    if len(new_proc):
+        process_list.remove(new_proc[0])
+        return new_proc[0]
+    return None
 
 class Process:
     last_scheduled_time = 0
@@ -41,10 +50,99 @@ def FCFS_scheduling(process_list):
 #Output_1 : Schedule list contains pairs of (time_stamp, proccess_id) indicating the time switching to that proccess_id
 #Output_2 : Average Waiting Time
 def RR_scheduling(process_list, time_quantum ):
-    return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
+    schedule = []
+    ready = []
+    current_time = 0
+    avail_process = deepcopy(process_list)
+    waiting_time = 0
+    current_process = None
+    remain_time = 0
+
+    while len(avail_process) or len(ready):
+        process = pop_new_process(avail_process, current_time)
+        if process:
+            ready.append(process)
+
+        if ready and not current_process:
+            current_process = ready.pop(0)
+            waiting_time += (current_time - current_process.last_scheduled_time) if current_process.last_scheduled_time > 0 else (current_time - current_process.arrive_time)
+            schedule.append((current_time,current_process.id))
+            remain_time = time_quantum
+
+        if current_process and remain_time:
+            current_process.burst_time -= 1
+            remain_time -= 1
+            if current_process.burst_time == 0:
+                current_process = None
+            elif remain_time == 0:
+                current_process.last_scheduled_time = current_time + 1
+                ready.append(current_process) # append to last of ready queue
+                current_process = None 
+
+        current_time += 1
+
+    average_waiting_time = waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
 
 def SRTF_scheduling(process_list):
-    return (["to be completed, scheduling process_list on SRTF, using process.burst_time to calculate the remaining time of the current process "], 0.0)
+    schedule = []
+    ready = []
+    current_time = 0
+    waiting_time = 0
+    avail_process = deepcopy(process_list)
+    current_process = None
+
+    while len(avail_process) or len(ready):
+        if current_process and current_process.burst_time == 0:
+            current_process = None
+
+        process = pop_new_process(avail_process, current_time)
+        if process and current_process:
+            if process.burst_time < current_process.burst_time:
+                # Switch to arrival process
+                current_process.last_scheduled_time = current_time
+                ready.append(current_process)
+                schedule.append((current_time,process.id))
+                current_process = process
+            else:
+                # Pend the arrival process and continue current process
+                ready.append(process)
+        elif process and not current_process:
+            # Start process immediately, or get least process
+            if len(ready):
+                least_process = min(ready,key=attrgetter('burst_time', 'arrive_time'))
+                if process.burst_time < least_process.burst_time:
+                    # Still start new process
+                    schedule.append((current_time,process.id))
+                    current_process = process
+                else:
+                    ready.append(process)
+                    ready.remove(least_process)
+                    schedule.append((current_time,least_process.id))
+                    current_process = process
+                    waiting_time += (current_time - current_process.last_scheduled_time) if current_process.last_scheduled_time > 0 else (current_time - current_process.arrive_time)
+                    # calc waiting
+            else:
+                schedule.append((current_time,process.id))
+                current_process = process
+        elif not process and not current_process:
+            if len(ready):
+                least_process = min(ready,key=attrgetter('burst_time', 'arrive_time'))
+                ready.remove(least_process)
+                schedule.append((current_time,least_process.id))
+                current_process = least_process
+                waiting_time += (current_time - current_process.last_scheduled_time) if current_process.last_scheduled_time > 0 else (current_time - current_process.arrive_time)
+            # else idle, continue
+        #else (not process and current_process)
+        # continue current process
+        
+        if current_process:
+            current_process.burst_time -= 1
+        
+        current_time += 1
+
+    average_waiting_time = waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
 
 def SJF_scheduling(process_list, alpha):
     return (["to be completed, scheduling SJF without using information from process.burst_time"],0.0)
