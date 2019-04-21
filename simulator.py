@@ -53,8 +53,8 @@ def RR_scheduling(process_list, time_quantum ):
     schedule = []
     ready = []
     current_time = 0
-    avail_process = deepcopy(process_list)
     waiting_time = 0
+    avail_process = deepcopy(process_list)
     current_process = None
     remain_time = 0
 
@@ -96,48 +96,30 @@ def SRTF_scheduling(process_list):
     current_process = None
 
     while len(avail_process) or len(ready):
+        # Mark the process as complete
         if current_process and current_process.burst_time == 0:
             current_process = None
 
         process = pop_new_process(avail_process, current_time)
-        if process and current_process:
-            if process.burst_time < current_process.burst_time:
-                # Switch to arrival process
-                current_process.last_scheduled_time = current_time
-                ready.append(current_process)
-                schedule.append((current_time,process.id))
-                current_process = process
-            else:
-                # Pend the arrival process and continue current process
-                ready.append(process)
-        elif process and not current_process:
-            # Start process immediately, or get least process
-            if len(ready):
-                least_process = min(ready,key=attrgetter('burst_time', 'arrive_time'))
-                if process.burst_time < least_process.burst_time:
-                    # Still start new process
-                    schedule.append((current_time,process.id))
-                    current_process = process
-                else:
-                    ready.append(process)
-                    ready.remove(least_process)
-                    schedule.append((current_time,least_process.id))
-                    current_process = process
-                    waiting_time += (current_time - current_process.last_scheduled_time) if current_process.last_scheduled_time > 0 else (current_time - current_process.arrive_time)
-                    # calc waiting
-            else:
-                schedule.append((current_time,process.id))
-                current_process = process
-        elif not process and not current_process:
-            if len(ready):
-                least_process = min(ready,key=attrgetter('burst_time', 'arrive_time'))
+        if process:
+            ready.append(process)
+
+        if len(ready) and not current_process:
+            least_process = min(ready,key=attrgetter('burst_time', 'arrive_time'))
+            # If least remaining time process in ready available
+            if least_process:
                 ready.remove(least_process)
                 schedule.append((current_time,least_process.id))
                 current_process = least_process
                 waiting_time += (current_time - current_process.last_scheduled_time) if current_process.last_scheduled_time > 0 else (current_time - current_process.arrive_time)
-            # else idle, continue
-        #else (not process and current_process)
-        # continue current process
+        elif process and current_process:
+            if process.burst_time < current_process.burst_time:
+                # Switch to arrival process
+                current_process.last_scheduled_time = current_time
+                ready.append(current_process)
+                ready.remove(process)
+                schedule.append((current_time,process.id))
+                current_process = process
         
         if current_process:
             current_process.burst_time -= 1
