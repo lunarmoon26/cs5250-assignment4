@@ -64,6 +64,9 @@ def RR_scheduling(process_list, time_quantum ):
     remain_time = 0
 
     while len(avail_process) or len(ready):
+        process = pop_new_process(avail_process, current_time)
+        if process:
+            ready.append(process)
 
         if current_process:
             if current_process.burst_time == 0:
@@ -72,10 +75,6 @@ def RR_scheduling(process_list, time_quantum ):
                 current_process.last_scheduled_time = current_time
                 ready.append(current_process) # append to last of ready queue
                 current_process = None 
-
-        process = pop_new_process(avail_process, current_time)
-        if process:
-            ready.append(process)
 
         if ready and not current_process:
             current_process = ready.pop(0)
